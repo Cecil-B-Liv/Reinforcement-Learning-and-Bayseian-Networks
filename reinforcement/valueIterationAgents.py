@@ -64,7 +64,39 @@ class ValueIterationAgent(ValueEstimationAgent):
           Run the value iteration algorithm. Note that in standard
           value iteration, V_k+1(...) depends on V_k(...)'s.
         """
-        "*** YOUR CODE HERE ***"
+        # This is the Bellman equation thats used in value iteration:
+        # V(s) = max_a Σ_s' P(s' | s, a) [R(s, a, s') + γ * V(s')]
+
+        # Because each iteration must be based on the values from the previous iteration
+        # we will need to use a placeholder to record the values are updated simutaniously at the end of each iteration
+        for i in range (self.iterations):
+            notedValues = util.Counter()
+
+            # Check for each state that the mdp can go to
+            for state in self.mdp.getStates():
+                if self.mdp.isTerminal(state): 
+                    # note the value as 0 if the state is terminal
+                    notedValues[state] = 0 
+                
+                else:
+                    # define the initial max value as negative infinite so the first value will always be recorded
+                    maxValue = float('-inf') 
+                    # iterate through every possible actions and calculate all the value for those actions
+                    
+                    for action in self.mdp.getPossibleActions(state):
+                        # Formula: P(s' | s, a) [R(s, a, s') + γ * V(s')] 
+                        actionValue = sum (
+                            prob * (self.mdp.getReward(state, action, nextState) + self.discount * self.values[nextState])
+                                for nextState, prob in self.mdp.getTransitionStatesAndProbs(state, action)
+                            )                       
+                        # Then we update the value if there's a better value
+                        # Formula: max_a Σ_s'
+                        maxValue = max(maxValue, actionValue) 
+
+                    # Lastly we update the placeholder
+                    notedValues[state] = maxValue
+
+            self.values = notedValues
 
     def getValue(self, state):
         """
@@ -77,7 +109,15 @@ class ValueIterationAgent(ValueEstimationAgent):
           Compute the Q-value of action in state from the
           value function stored in self.values.
         """
-        "*** YOUR CODE HERE ***"
+        # Qvalue for taking a specific action in a given state:
+        # Q(s, a) = ∑ P(s' | s, a) * [R(s, a, s') + γ * V(s')]
+        qValue = 0
+
+        for nextState, prob in self.mdp.getTransitionStatesAndProbs(state, action):
+            reward = self.mdp.getReward(state, action, nextState)
+            qValue += prob * (reward + self.discount * self.values[nextState])
+        
+        return qValue
         util.raiseNotDefined()
 
     def computeActionFromValues(self, state):
@@ -89,7 +129,24 @@ class ValueIterationAgent(ValueEstimationAgent):
           there are no legal actions, which is the case at the
           terminal state, you should return None.
         """
-        "*** YOUR CODE HERE ***"
+        # The formula to compute the best action (policy) from the value function is:
+        # π(s) = argmax_a Q(s, a)
+
+        if self.mdp.isTerminal(state):
+            return None
+
+        bestAction = None
+        bestValue = float('-inf')
+
+         # Iterate through the possible actions, compute them and find the highest value
+        for action in self.mdp.getPossibleActions(state):
+            qValue = self.computeQValueFromValues(state,action)
+            if qValue > bestValue:
+                bestValue = qValue
+                bestAction = action
+
+        return bestAction
+
         util.raiseNotDefined()
 
     def getPolicy(self, state):
