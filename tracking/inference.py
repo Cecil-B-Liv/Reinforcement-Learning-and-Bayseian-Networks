@@ -65,8 +65,17 @@ def constructBayesNet(gameState: hunters.GameState):
     variables = [PAC,GHOST0,GHOST1,OBS0,OBS1]
     edges = [(PAC,OBS0),(PAC,OBS1),(GHOST0,OBS0),(GHOST1,OBS1)]
     
+    # define variable domains
     mapList = [(x,y) for x in range(X_RANGE) for y in range(Y_RANGE)]
-    observedDistance = range(0, MAX_NOISE + X_RANGE + Y_RANGE -1)
+    
+    # True Manhattan Distance = (X_RANGE + Y_RANGE - 2)
+    maxDistance = X_RANGE + Y_RANGE - 2 
+    
+    # Observed Distance: non-negative and satisfies |obs - true| <= MAX_NOISE
+    # ObservedDistance represents all possible noisy distances
+    # The range starts from 0 and goes up to (maxDistance + MAX_NOISE), inclusive.
+    observedDistance = range(0, maxDistance + MAX_NOISE + 1) 
+    # plus 1 is to ensure the upper limit is counted when using range function
     
     variableDomainsDict = {
         PAC: mapList,
