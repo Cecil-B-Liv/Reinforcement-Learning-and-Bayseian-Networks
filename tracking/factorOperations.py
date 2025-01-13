@@ -104,32 +104,36 @@ def joinFactors(factors: List[Factor]):
     if not factors: 
         return None
 
-    unconditionalValues = set()
-    conditionalValues = set()
+    unconditionedVariables = set()
+    conditionedVariables = set()
 
     # print(factors)
 
     for factor in factors:
-        unconditionalValues.update(factor.unconditionedVariables())
-        conditionalValues.update(factor.conditionedVariables())
+        unconditionedVariables.update(factor.unconditionedVariables())
+        conditionedVariables.update(factor.conditionedVariables())
 
+    conditionedVariables -= unconditionedVariables
     # print(unconditionalValues)
     # print(conditionalValues)
 
-    conditionalValues -= unconditionalValues
-
     #create the new factor
     factorList = list(factors) # convert to access the index 
-    newFactor = Factor(unconditionalValues, conditionalValues, factorList[0].variableDomainsDict())
+    newFactor = Factor(unconditionedVariables, conditionedVariables, factorList[0].variableDomainsDict())
+    possibleAssignmentDicts = newFactor.getAllPossibleAssignmentDicts()
+    # print(newFactor.getAllPossibleAssignmentDicts())
+    # print(factorList[0].variableDomainsDict())
 
-    for assignment in newFactor.getAllPossibleAssignmentDicts():
-        print(assignment)
-        print(factor.getProbability(assignment))
+    for assignment in possibleAssignmentDicts:
+        # print(assignment)
+        # print(factor.getProbability(assignment))
         probability = 1.0
         for factor in factorList:
+            # P_new(x) = product(P_f(x) for all factors f) 
             probability *= factor.getProbability(assignment)
         newFactor.setProbability(assignment, probability)
 
+    # print(newFactor)
     return newFactor
 
     # raiseNotDefined()
@@ -182,9 +186,38 @@ def eliminateWithCallTracking(callTrackingList=None):
                     "eliminationVariable:" + str(eliminationVariable) + "\n" +\
                     "unconditionedVariables: " + str(factor.unconditionedVariables()))
 
-        "*** YOUR CODE HERE ***"
-        raiseNotDefined()
-        "*** END YOUR CODE HERE ***"
+        # "*** YOUR CODE HERE ***"
+        # unconditioned variables are the ones on the left, conditioned ones are on the right
+        unconditionedVariables = factor.unconditionedVariables() - {eliminationVariable}
+        conditionedVariables = factor.conditionedVariables()
+
+        # create a new factor as the answer to return
+        resultFactor = Factor(unconditionedVariables, conditionedVariables,factor.variableDomainsDict())
+        # the function will generate all possible assignment from the given factor
+        possibleAssignmentDicts = factor.getAllPossibleAssignmentDicts() 
+        # also we need to use the original factor to still include the eliminationVariable
+
+        for assignment in possibleAssignmentDicts: 
+            probability = factor.getProbability(assignment)
+
+            # make a copy of the assignment and remove the elimination variable
+            reducedAssignment = assignment.copy()  
+            # the code already checked the existence of the elimination variable but adding None to prevent it raising an error
+            reducedAssignment.pop(eliminationVariable,None) 
+            # this reduced the assignment of the eliminationVariable also, which match it with the structure of newFactor 
+            # that got minus its eliminationVariable when its created
+
+            # Update the probability in the resultFactor with the reducedAssignment
+            currentProbability = resultFactor.getProbability(reducedAssignment)
+            resultFactor.setProbability(reducedAssignment, currentProbability + probability)
+
+        # print(possibleAssignmentDicts)
+        # print(factor)
+        # print(resultFactor)
+        return resultFactor
+
+        # raiseNotDefined()
+        # "*** END YOUR CODE HERE ***"
 
     return eliminate
 
