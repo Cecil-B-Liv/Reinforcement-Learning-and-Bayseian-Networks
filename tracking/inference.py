@@ -209,20 +209,20 @@ def inferenceByVariableEliminationWithCallTracking(callTrackingList=None):
         updatedFactor = bayesNet.getAllCPTsWithEvidence(evidenceDict)
         # print(evidenceDict)
         # print(updatedFactor)
-        print(eliminationOrder)
+        # print(eliminationOrder)
 
         for eliminationVariable in eliminationOrder:
             currentFactorsNotToJoin, joinedFactor = joinFactorsByVariable(updatedFactor, eliminationVariable)
             # Returns a tuple of (factors not joined, resulting factor from joinFactors)
-            # print(currentFactorsNotToJoin)
-            # print(joinedFactor)
+            # print(currentFactorsNotToJoin) (factors that dont have the eliminationVariable)
+            # print(joinedFactor) (new factor that includes all relevant variable)
             
             # check so you skip the elimination of the factor that has only 1 unconditioned variable
             if len(joinedFactor.unconditionedVariables()) != 1:
                 removedVariableFactor = eliminate(joinedFactor, eliminationVariable) # eliminate the variable
                 #update the factor
                 updatedFactor = currentFactorsNotToJoin
-                updatedFactor.append(removedVariableFactor)
+                updatedFactor.append(removedVariableFactor) # append the unused factor to the newly joined factor
             else: #skip 
                 updatedFactor = currentFactorsNotToJoin 
 
